@@ -1,0 +1,36 @@
+# Build-and-pack only: the test suite runs on Travis (.travis.yml). This job
+# builds tomcat-embed-core.jar with `ant package embed-jars` on JDK 8 and
+# uploads it under its public versioned name (the output jar is unversioned).
+name: seal-build
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '8'
+      - name: Install Ant 1.10.14
+        run: |
+          curl -fsSL -o "$RUNNER_TEMP/ant.tar.gz" https://archive.apache.org/dist/ant/binaries/apache-ant-1.10.14-bin.tar.gz
+          tar -xzf "$RUNNER_TEMP/ant.tar.gz" -C "$RUNNER_TEMP"
+          echo "ANT_HOME=$RUNNER_TEMP/apache-ant-1.10.14" >> "$GITHUB_ENV"
+          echo "$RUNNER_TEMP/apache-ant-1.10.14/bin" >> "$GITHUB_PATH"
+      - name: Build
+        run: |
+          java -version
+          ant -version
+          ant -noinput package embed-jars
+          mkdir -p seal-dist
+          cp output/embed/tomcat-embed-core.jar seal-dist/tomcat-embed-core-9.0.39.jar
+      - uses: actions/upload-artifact@v4
+        with:
+          name: tomcat-embed-core
+          path: seal-dist/tomcat-embed-core-9.0.39.jar
+          if-no-files-found: error

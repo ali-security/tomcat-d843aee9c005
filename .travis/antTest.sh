@@ -31,4 +31,6 @@ RC=$?
         done
     fi
 } > test-failures.log
+# Print per-suite results, every skipped test with its reason and the totals
+python3 .travis/testSummary.py output/build/logs test
 exit $RC
